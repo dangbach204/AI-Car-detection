@@ -1,22 +1,3 @@
-"""
-tracker.py
-==========
-Theo dõi xe giữa các frame và đếm số lượng xe.
-
-Thuật toán Centroid Tracker:
-    1. Mỗi xe được gán một ID duy nhất khi xuất hiện lần đầu.
-    2. Giữa 2 frame liên tiếp, khớp các tâm mới với tâm cũ bằng
-       khoảng cách Euclidean (Hungarian algorithm / greedy).
-    3. Nếu không khớp → tạo object mới.
-    4. Nếu object mất tích quá nhiều frame → xóa khỏi danh sách.
-    5. Khi tâm xe đi qua đường đếm (counting line) → tăng bộ đếm.
-
-Đường đếm (Counting Line):
-    - Một đường ngang hoặc dọc cố định trên frame.
-    - Khi tâm của xe đi từ phía này sang phía kia → đếm.
-    - Hướng di chuyển (vào/ra) được phân biệt để tính 2 chiều.
-"""
-
 import numpy as np
 from collections import OrderedDict, defaultdict
 from typing import List, Tuple, Dict, Optional
@@ -27,9 +8,9 @@ Centroid = Tuple[int, int]            # (cx, cy)
 ObjectID  = int
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  CENTROID TRACKER
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 class CentroidTracker:
     """
@@ -159,9 +140,9 @@ class CentroidTracker:
         return self.trajectories.get(oid, [])
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  COUNTING LINE
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 class CountingLine:
     """
@@ -319,9 +300,9 @@ class CountingLine:
 import cv2  # noqa: E402 (import ở cuối để tránh circular)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  VEHICLE COUNTER (kết hợp Tracker + CountingLine)
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 class VehicleCounter:
     """

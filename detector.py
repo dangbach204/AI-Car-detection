@@ -48,9 +48,9 @@ DETECT_CFG = dict(
 )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  IMAGE PYRAMID
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 def image_pyramid(image: np.ndarray,
                   scale: float = 1.25,
@@ -81,9 +81,9 @@ def image_pyramid(image: np.ndarray,
         current_scale *= scale
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  SLIDING WINDOW
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 def sliding_window(image: np.ndarray,
                    win_size: Tuple[int, int],
@@ -105,9 +105,9 @@ def sliding_window(image: np.ndarray,
             yield x, y, image[y:y + win_h, x:x + win_w]
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  NMS — Non-Maximum Suppression
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 def compute_iou(box_a: np.ndarray, box_b: np.ndarray) -> float:
     """Tính IoU (Intersection over Union) giữa 2 bbox."""
@@ -163,9 +163,9 @@ def non_max_suppression(boxes: np.ndarray,
     return kept
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  MERGE BOXES
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 def _coverage(b_small, b_large) -> float:
     """Tỷ lệ diện tích b_small bị b_large che phủ."""
@@ -271,9 +271,9 @@ def remove_nested_boxes(boxes, coverage_thresh: float = 0.45):
     return final
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+
 #  VEHICLE DETECTOR
-# ═══════════════════════════════════════════════════════════════════════════
+
 
 class VehicleDetector:
     """

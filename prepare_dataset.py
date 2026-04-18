@@ -1,34 +1,3 @@
-"""
-prepare_dataset.py
-==================
-Chuyển đổi dataset YOLO format (Stanford Cars từ Kaggle)
-→ thư mục positive/ và negative/ để train HOG + SVM
-
-Cấu trúc dataset đầu vào (YOLO format):
-    data_raw/
-    ├── train/
-    │   ├── images/   ← file ảnh .jpg / .png
-    │   └── labels/   ← file nhãn .txt (YOLO format)
-    ├── valid/        (hoặc "value")
-    │   ├── images/
-    │   └── labels/
-    └── test/
-        ├── images/
-        └── labels/
-
-Format mỗi dòng trong file .txt (YOLO):
-    class_id  x_center  y_center  width  height
-    (tất cả đã chuẩn hóa 0–1 so với kích thước ảnh)
-
-Kết quả đầu ra:
-    data/
-    ├── positive/   ← crop vùng CÓ XE (64×128 px)
-    └── negative/   ← crop vùng KHÔNG CÓ XE (64×128 px)
-
-Cách dùng:
-    python prepare_dataset.py --raw car_dataset-master --out data --splits train valid test
-"""
-
 import cv2
 import numpy as np
 import argparse
@@ -38,8 +7,8 @@ from tqdm import tqdm
 
 
 # ── Kích thước ảnh chuẩn cho HOG ────────────────────────────────────────────
-TARGET_W = 64
-TARGET_H = 128
+TARGET_W = 128
+TARGET_H = 64
 TARGET_SIZE = (TARGET_W, TARGET_H)
 
 # ── Padding khi crop ảnh xe (để có thêm context) ─────────────────────────────
@@ -292,7 +261,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--max", type=int, default=None,
-        help="Số ảnh tối đa mỗi lớp (không đặt = lấy hết ~8000 pos + 8000 neg)"
+        help="Số ảnh tối đa mỗi lớp"
     )
     args = parser.parse_args()
 

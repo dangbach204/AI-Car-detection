@@ -1,19 +1,3 @@
-"""
-app.py
-======
-Ứng dụng Streamlit — Đếm xe bằng HOG + SVM
-
-Tính năng:
-    • Tải video hoặc dùng camera trực tiếp
-    • Điều chỉnh tham số phát hiện theo thời gian thực
-    • Hiển thị kết quả đếm xe (vào/ra)
-    • Trực quan hóa pipeline HOG
-    • Xuất báo cáo CSV
-
-Chạy:
-    streamlit run app.py
-"""
-
 import cv2
 import numpy as np
 import streamlit as st
@@ -36,9 +20,9 @@ from tracker import VehicleCounter
 from generate_demo_data import create_demo_video
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  CẤU HÌNH TRANG
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 st.set_page_config(
     page_title="Vehicle Counter — HOG + SVM",
@@ -139,9 +123,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  HÀM TIỆN ÍCH
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 @st.cache_resource
 def load_model_cached(model_dir: str):
@@ -204,9 +188,9 @@ def process_frame(frame: np.ndarray,
     return bgr_to_rgb(annotated), boxes, counter.total_count, counter.count_in, counter.count_out
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  SIDEBAR
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 with st.sidebar:
     st.markdown('<p style="color:#60a5fa;font-weight:700;font-size:1.1rem;letter-spacing:1px;">⚙️ CONFIGURATION</p>', unsafe_allow_html=True)
@@ -260,9 +244,9 @@ with st.sidebar:
     playback_fps    = st.slider("Tốc độ xử lý (FPS cap)", 1, 60, 15)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  MAIN CONTENT
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -281,9 +265,9 @@ tab_detect, tab_train, tab_explain, tab_about = st.tabs([
 ])
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  TAB 1: PHÁT HIỆN & ĐẾM
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_detect:
 
     col_src, col_opt = st.columns([2, 1])
@@ -478,9 +462,9 @@ with tab_detect:
             )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  TAB 2: HUẤN LUYỆN
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_train:
     st.markdown("""
     <div class="step-badge">TRAINING PIPELINE</div>
@@ -504,8 +488,8 @@ with tab_train:
     """)
 
     col_pos, col_neg = st.columns(2)
-    pos_dir_input = col_pos.text_input("📁 Thư mục ảnh CÓ XE",  value="data/positive")
-    neg_dir_input = col_neg.text_input("📁 Thư mục ảnh KHÔNG XE", value="data/negative")
+    pos_dir_input = col_pos.text_input("📁 Thư mục ảnh CÓ XE",  value="BIT_dataset/positive")
+    neg_dir_input = col_neg.text_input("📁 Thư mục ảnh KHÔNG XE", value="BIT_dataset/negative")
 
     col_c, col_max, col_test = st.columns(3)
     svm_C_val    = col_c.number_input("SVM C", value=0.01, min_value=0.0001, format="%.4f")
@@ -554,9 +538,9 @@ with tab_train:
             st.exception(e)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  TAB 3: GIẢI THÍCH PIPELINE HOG
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_explain:
     st.markdown("""
     <div class="step-badge">PIPELINE VISUALIZATION</div>
@@ -648,9 +632,9 @@ with tab_explain:
         """)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  TAB 4: HƯỚNG DẪN
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_about:
     st.markdown("""
     ## 🚗 Vehicle Counter — HOG + SVM
@@ -710,7 +694,7 @@ with tab_about:
     python src/generate_demo_data.py --n-pos 500 --n-neg 500 --video
 
     # 3. Huấn luyện model
-    python src/train.py --pos data/positive --neg data/negative
+    python src/train.py --pos BIT_dataset/positive --neg BIT_dataset/negative
 
     # 4. Chạy ứng dụng
     streamlit run app.py
