@@ -23,13 +23,13 @@ import cv2
 
 # ── Tham số HOG (đề xuất cho phát hiện xe) ─────────────────────────────────
 HOG_PARAMS = dict(
-    orientations=9,          # số bin hướng (0°–180°, mỗi bin = 20°)
-    pixels_per_cell=(8, 8),  # kích thước cell (px×px)
-    cells_per_block=(2, 2),  # kích thước block (cell×cell)
-    block_norm="L2-Hys",     # chuẩn hóa Lowe's L2-Hys
-    visualize=False,         # không cần ảnh minh họa trong train
-    feature_vector=True,     # trả về vector 1D
-    channel_axis=None        # ảnh grayscale (không có kênh màu)
+    orientations=12,          # tăng từ 9 → 12
+    pixels_per_cell=(8, 8),
+    cells_per_block=(3, 3),   # tăng từ 2×2 → 3×3
+    block_norm="L2-Hys",
+    visualize=False,
+    feature_vector=True,
+    channel_axis=None
 )
 
 
