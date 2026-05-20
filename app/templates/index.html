@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Counter v3</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="header">
+  <h1>🚗 Vehicle Counter v3</h1>
+  <p>HoG + LinearSVM &nbsp;·&nbsp; Heatmap &nbsp;·&nbsp; Realtime Live</p>
+</div>
+
+<div class="main">
+
+  <!-- CAMERA CARD -->
+  <div class="card">
+    <div class="card-title" id="liveTitle"><span class="dot-off" id="liveDot"></span>Camera Live</div>
+
+    <div class="controls">
+
+  <button
+    class="btn btn-cam-on"
+    onclick="startMobileCamera()"
+  >
+    📱 Bật camera
+  </button>
+
+  <button
+    class="btn btn-start"
+    onclick="startDetection()"
+  >
+    ▶ START
+  </button>
+
+  <button
+    class="btn btn-stop"
+    onclick="stopDetection()"
+  >
+    ⏹ STOP
+  </button>
+
+</div>
+
+    <!-- Stream -->
+    <div class="cam-wrap">
+      <div class="cam-off-screen" id="camOff">
+        <span class="off-icon">📷</span>
+        <span>Camera chưa bật</span>
+      </div>
+      <video id="mobileVideo" autoplay playsinline muted style="display:none"></video>
+      <canvas id="overlayCanvas" style="position:absolute; inset:0; width:100%; height:100%; display:none;"></canvas>
+      <div class="cam-overlay-tl" id="liveLabel" style="display:none">LIVE</div>
+      <div class="cam-overlay-tr" id="fpsOverlay" style="display:none">
+        <span>Stream <b id="fps_s">—</b> FPS</span>
+
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat"><div class="val" id="cnt">0</div><div class="lbl">Xe hiện tại</div></div>
+      <div class="stat"><div class="val" id="fps_sv">—</div><div class="lbl">Stream FPS</div></div>
+      <div class="stat"><div class="val" id="fps_dv">—</div><div class="lbl">Detect FPS</div></div>
+      <div class="stat"><div class="val" id="elapsed">00:00</div><div class="lbl">Thời gian</div></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn btn-save" onclick="doSave()">💾 Lưu</button>
+      <button class="btn btn-reset" onclick="doReset()">🔄 Reset</button>
+      <button class="btn btn-cam-off" onclick="stopCam()" id="btnToggleCam2" style="display:none">⏹ Tắt camera</button>
+    </div>
+  </div>
+
+  <!-- LỊCH SỬ -->
+  <div class="card">
+    <div class="card-title">📋 Lịch sử phiên đếm</div>
+    <div id="historyWrap">
+      <div class="empty-history">Chưa có phiên nào — nhấn Reset &amp; Lưu để ghi lại</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
