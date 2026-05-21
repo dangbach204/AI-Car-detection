@@ -136,3 +136,16 @@ body {
 .btn-stop {
     background: #dc2626;
 }
+
+/* ── Upload button ── */
+.btn-upload {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+    color: #fff;
+    width: 100%;
+}
+.cam-wrap img#serverStream {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vehicle Counter v3</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -22,42 +21,33 @@
     <div class="card-title" id="liveTitle"><span class="dot-off" id="liveDot"></span>Camera Live</div>
 
     <div class="controls">
+      <button class="btn btn-cam-on" onclick="startMobileCamera()">📱 Bật camera</button>
+      <button class="btn btn-start"  onclick="startDetection()">▶ START</button>
+      <button class="btn btn-stop"   onclick="stopDetection()">⏹ STOP</button>
+    </div>
 
-  <button
-    class="btn btn-cam-on"
-    onclick="startMobileCamera()"
-  >
-    📱 Bật camera
-  </button>
+    <!-- Video upload -->
+    <div class="controls">
+      <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">
+        📁 Test với file video
+      </button>
+      <input type="file" id="fileInput" accept="video/*"
+             style="display:none"
+             onchange="handleVideoUpload(this.files[0])">
+    </div>
 
-  <button
-    class="btn btn-start"
-    onclick="startDetection()"
-  >
-    ▶ START
-  </button>
-
-  <button
-    class="btn btn-stop"
-    onclick="stopDetection()"
-  >
-    ⏹ STOP
-  </button>
-
-</div>
-
-    <!-- Stream -->
+    <!-- Stream area -->
     <div class="cam-wrap">
       <div class="cam-off-screen" id="camOff">
         <span class="off-icon">📷</span>
         <span>Camera chưa bật</span>
       </div>
-      <video id="mobileVideo" autoplay playsinline muted style="display:none"></video>
+      <video  id="mobileVideo"   autoplay playsinline muted style="display:none"></video>
       <canvas id="overlayCanvas" style="position:absolute; inset:0; width:100%; height:100%; display:none;"></canvas>
-      <div class="cam-overlay-tl" id="liveLabel" style="display:none">LIVE</div>
+      <img    id="serverStream"  style="display:none; width:100%; height:100%; object-fit:cover;" alt="">
+      <div class="cam-overlay-tl" id="liveLabel"  style="display:none">LIVE</div>
       <div class="cam-overlay-tr" id="fpsOverlay" style="display:none">
         <span>Stream <b id="fps_s">—</b> FPS</span>
-
       </div>
     </div>
 
@@ -71,7 +61,7 @@
 
     <!-- Buttons -->
     <div class="btn-row">
-      <button class="btn btn-save" onclick="doSave()">💾 Lưu</button>
+      <button class="btn btn-save"  onclick="doSave()">💾 Lưu</button>
       <button class="btn btn-reset" onclick="doReset()">🔄 Reset</button>
       <button class="btn btn-cam-off" onclick="stopCam()" id="btnToggleCam2" style="display:none">⏹ Tắt camera</button>
     </div>

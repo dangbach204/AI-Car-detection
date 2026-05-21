@@ -5,21 +5,25 @@ let mobileCtx     = null;
 let overlayCanvas = null;
 let overlayCtx    = null;
 
-let isDetecting = false;
-let history     = [];
+let isDetecting  = false;
+let videoMode    = false;       // true khi đang play file video qua server
+let statsPoll    = null;
+let history      = [];
 
-// Timer: chỉ chạy khi detection đang ON
-let elapsedMs       = 0;       // ms đã tích luỹ
-let timerStart      = null;    // null = đang pause
+// Timer
+let elapsedMs       = 0;
+let timerStart      = null;
 let elapsedInterval = null;
 
 // ─── Config ────────────────────────────────────────────
-const DETECT_INTERVAL_MS = 500;
-const SEND_W = 640;
-const SEND_H = 480;
-const JPEG_QUALITY = 0.6;
+const DETECT_INTERVAL_MS = 350;
+const SEND_W       = 640;
+const SEND_H       = 480;
+const JPEG_QUALITY = 0.85;
 
-// ─── Timer helpers ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════════
 function tickTimer() {
     const ms = (timerStart !== null)
         ? elapsedMs + (Date.now() - timerStart)
@@ -29,17 +33,11 @@ function tickTimer() {
     const s = String(sec % 60).padStart(2, "0");
     document.getElementById("elapsed").textContent = m + ":" + s;
 }
-
 function startTimer() {
-    if (timerStart === null) {
-        timerStart = Date.now();
-    }
-    if (!elapsedInterval) {
-        elapsedInterval = setInterval(tickTimer, 1000);
-    }
+    if (timerStart === null) timerStart = Date.now();
+    if (!elapsedInterval)    elapsedInterval = setInterval(tickTimer, 1000);
     tickTimer();
 }
-
 function pauseTimer() {
     if (timerStart !== null) {
         elapsedMs += Date.now() - timerStart;
@@ -51,15 +49,19 @@ function pauseTimer() {
     }
     tickTimer();
 }
-
 function resetTimer() {
     elapsedMs = 0;
     if (timerStart !== null) timerStart = Date.now();
     tickTimer();
 }
 
-// ─── Camera ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  CAMERA MODE
+// ═══════════════════════════════════════════════════════
 async function startMobileCamera() {
+    // Nếu đang ở video mode thì tắt trước
+    if (videoMode) exitVideoMode();
+
     try {
         mobileVideo   = document.getElementById("mobileVideo");
         overlayCanvas = document.getElementById("overlayCanvas");
@@ -82,8 +84,8 @@ async function startMobileCamera() {
 
         mobileVideo.style.display       = "block";
         overlayCanvas.style.display     = "block";
-        document.getElementById("camOff").style.display = "none";
-        document.getElementById("btnToggleCam2").style.display = "block";
+        document.getElementById("camOff").style.display          = "none";
+        document.getElementById("btnToggleCam2").style.display   = "block";
 
         overlayCanvas.width  = mobileVideo.videoWidth;
         overlayCanvas.height = mobileVideo.videoHeight;
@@ -109,8 +111,11 @@ function stopCam() {
     document.getElementById("btnToggleCam2").style.display = "none";
 }
 
-// ─── Detection ─────────────────────────────────────────
 function startDetection() {
+    if (videoMode) {
+        alert("Đang ở chế độ video, không cần START — server tự detect.");
+        return;
+    }
     if (!mobileVideo) {
         alert("Hãy bật camera trước!");
         return;
@@ -119,7 +124,6 @@ function startDetection() {
     isDetecting = true;
     startTimer();
     detectLoop();
-    console.log("Detection started");
 }
 
 function stopDetection() {
@@ -128,17 +132,14 @@ function stopDetection() {
     if (overlayCtx) {
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
     }
-    console.log("Detection stopped");
+    if (videoMode) exitVideoMode();
 }
 
 async function detectLoop() {
     while (isDetecting) {
         const t0 = performance.now();
-        try {
-            await detectOnce();
-        } catch (e) {
-            console.error("detect error:", e);
-        }
+        try { await detectOnce(); }
+        catch (e) { console.error("detect error:", e); }
         const elapsed = performance.now() - t0;
         const wait = Math.max(0, DETECT_INTERVAL_MS - elapsed);
         await new Promise(r => setTimeout(r, wait));
@@ -147,7 +148,6 @@ async function detectLoop() {
 
 async function detectOnce() {
     if (!mobileVideo || mobileVideo.videoWidth === 0) return;
-
     mobileCtx.drawImage(mobileVideo, 0, 0, SEND_W, SEND_H);
     const imageData = mobileCanvas.toDataURL("image/jpeg", JPEG_QUALITY);
 
@@ -159,13 +159,10 @@ async function detectOnce() {
     if (!resp.ok) throw new Error("HTTP " + resp.status);
 
     const result = await resp.json();
-    console.log("server →", result.boxes.length, "boxes, count =", result.count);
-
     document.getElementById("cnt").textContent = result.count;
     drawOverlay(result.boxes, result.line_y, result.frame_w, result.frame_h);
 }
 
-// ─── Vẽ overlay ────────────────────────────────────────
 function drawOverlay(boxes, lineY, srcW, srcH) {
     if (overlayCanvas.width !== mobileVideo.videoWidth ||
         overlayCanvas.height !== mobileVideo.videoHeight) {
@@ -177,6 +174,7 @@ function drawOverlay(boxes, lineY, srcW, srcH) {
     const sx = overlayCanvas.width  / srcW;
     const sy = overlayCanvas.height / srcH;
 
+    // line
     const ly = lineY * sy;
     overlayCtx.beginPath();
     overlayCtx.moveTo(0, ly);
@@ -185,6 +183,7 @@ function drawOverlay(boxes, lineY, srcW, srcH) {
     overlayCtx.strokeStyle = "red";
     overlayCtx.stroke();
 
+    // boxes
     overlayCtx.lineWidth   = 3;
     overlayCtx.strokeStyle = "#22c55e";
     overlayCtx.fillStyle   = "#22c55e";
@@ -200,36 +199,118 @@ function drawOverlay(boxes, lineY, srcW, srcH) {
     });
 }
 
-// ─── Reset / Save / History ────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  VIDEO UPLOAD MODE
+// ═══════════════════════════════════════════════════════
+async function handleVideoUpload(file) {
+    if (!file) return;
+
+    // Tắt camera mode nếu đang chạy
+    if (isDetecting) {
+        isDetecting = false;
+        pauseTimer();
+    }
+    if (mobileVideo && mobileVideo.srcObject) {
+        mobileVideo.srcObject.getTracks().forEach(t => t.stop());
+        mobileVideo.srcObject = null;
+        mobileVideo.style.display = "none";
+    }
+    if (document.getElementById("overlayCanvas")) {
+        document.getElementById("overlayCanvas").style.display = "none";
+    }
+    document.getElementById("btnToggleCam2").style.display = "none";
+
+    // Show loading
+    const camOff = document.getElementById("camOff");
+    camOff.style.display = "flex";
+    camOff.innerHTML = "<span class='off-icon'>📤</span><span>Đang tải video lên server…</span>";
+
+    // Upload
+    const fd = new FormData();
+    fd.append("video", file);
+    try {
+        const resp   = await fetch("/upload_video", { method: "POST", body: fd });
+        const result = await resp.json();
+        if (!result.ok) {
+            alert("Upload thất bại: " + (result.error || ""));
+            camOff.innerHTML = "<span class='off-icon'>📷</span><span>Camera chưa bật</span>";
+            return;
+        }
+    } catch (e) {
+        alert("Upload lỗi: " + e.message);
+        camOff.innerHTML = "<span class='off-icon'>📷</span><span>Camera chưa bật</span>";
+        return;
+    }
+
+    // Switch sang stream MJPEG từ server
+    videoMode = true;
+    camOff.style.display = "none";
+    const streamImg = document.getElementById("serverStream");
+    streamImg.style.display = "block";
+    streamImg.src = "/video_stream?t=" + Date.now();   // bust cache
+
+    // Reset count + timer + start polling /stats
+    document.getElementById("cnt").textContent = "0";
+    elapsedMs = 0;
+    timerStart = null;
+    startTimer();
+
+    if (statsPoll) clearInterval(statsPoll);
+    statsPoll = setInterval(async () => {
+        try {
+            const r = await fetch("/stats");
+            const d = await r.json();
+            document.getElementById("cnt").textContent = d.count;
+            if (d.fps_stream) {
+                document.getElementById("fps_sv").textContent = d.fps_stream;
+            }
+        } catch(e) {}
+    }, 500);
+}
+
+function exitVideoMode() {
+    videoMode = false;
+    const streamImg = document.getElementById("serverStream");
+    if (streamImg) {
+        streamImg.src = "";
+        streamImg.style.display = "none";
+    }
+    document.getElementById("camOff").style.display = "flex";
+    document.getElementById("camOff").innerHTML =
+        "<span class='off-icon'>📷</span><span>Camera chưa bật</span>";
+    if (statsPoll) {
+        clearInterval(statsPoll);
+        statsPoll = null;
+    }
+    pauseTimer();
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESET / SAVE / HISTORY
+// ═══════════════════════════════════════════════════════
 function doReset() {
-    fetch("/reset")
-        .then(r => r.json())
-        .then(() => {
-            resetTimer();
-            document.getElementById("cnt").textContent = 0;
-            renderHistory();
-        })
-        .catch(() => { resetTimer(); });
+    fetch("/reset").then(r => r.json()).then(() => {
+        resetTimer();
+        document.getElementById("cnt").textContent = 0;
+        renderHistory();
+    }).catch(() => { resetTimer(); });
 }
 
 function doSave() {
-    fetch("/stats")
-        .then(r => r.json())
-        .then(d => {
-            const ms = (timerStart !== null)
-                ? elapsedMs + (Date.now() - timerStart)
-                : elapsedMs;
-            const sec = Math.floor(ms / 1000);
-            const m = String(Math.floor(sec/60)).padStart(2, "0");
-            const s = String(sec % 60).padStart(2, "0");
-            history.unshift({
-                count:    d.count,
-                duration: m + ":" + s,
-                time:     new Date().toLocaleTimeString("vi-VN")
-            });
-            renderHistory();
-        })
-        .catch(() => {});
+    fetch("/stats").then(r => r.json()).then(d => {
+        const ms = (timerStart !== null)
+            ? elapsedMs + (Date.now() - timerStart)
+            : elapsedMs;
+        const sec = Math.floor(ms / 1000);
+        const m = String(Math.floor(sec/60)).padStart(2, "0");
+        const s = String(sec % 60).padStart(2, "0");
+        history.unshift({
+            count:    d.count,
+            duration: m + ":" + s,
+            time:     new Date().toLocaleTimeString("vi-VN")
+        });
+        renderHistory();
+    }).catch(() => {});
 }
 
 function renderHistory() {
